@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# p03-web-report
-=======
 # p03-web-report
 
 ## Introduction
@@ -14,4 +11,3 @@
 ## Conclusion
 
 *Summarize the project and discuss any future developments or considerations.*
->>>>>>> 18a278e (initial commit)
