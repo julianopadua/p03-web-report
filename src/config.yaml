@@ -1,4 +1,6 @@
 # configuration parameters
+api_keys:
+  groq: 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
 paths:
   data_raw: ../data/raw
   data_processed: ../data/processed
