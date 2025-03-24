@@ -6,6 +6,48 @@ paths = load_config()
 
 client = Groq(api_key=paths["groq"])
 
+
+def translate_chart_labels(labels_dict, target_language="pt"):
+    """
+    Translates chart-related labels (title, axis labels) into the desired language using LLaMA.
+
+    Args:
+        labels_dict (dict): Dictionary with chart labels (e.g., {"title": "Stock Price", "x_axis": "Date"}).
+        target_language (str): Target language code (e.g., "pt" for Portuguese).
+
+    Returns:
+        dict: Translated labels dictionary.
+    """
+    prompt = f"""
+    You are a professional translator. Translate the following chart-related terms into {target_language},
+    keeping them concise and appropriate for a financial chart:
+
+    {labels_dict}
+
+    Translated:
+    """
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_completion_tokens=100,
+            top_p=1,
+            stream=False,
+        )
+
+        translated_text = completion.choices[0].message.content.strip()
+        
+        # Convert response back into a dictionary format
+        translated_labels = eval(translated_text) if "{" in translated_text else {"error": "Invalid response"}
+        
+        return translated_labels
+
+    except Exception as e:
+        print(f"❌ Error contacting LLaMA: {e}")
+        return labels_dict  # Fallback to original labels if translation fails
+
 def translate_date(date_str, target_language="pt"):
     """
     Ask LLaMA to translate a date into the desired language.
@@ -43,12 +85,11 @@ def translate_date(date_str, target_language="pt"):
 
 # Example usage
 if __name__ == "__main__":
-    date_en = "March 24, 2025"
-    
-    # Translate to Portuguese
-    date_pt = translate_date(date_en, target_language="pt")
-    print(f"📅 Translated Date (PT): {date_pt}")
+    labels = {
+        "title": "AAPL Stock Price Over Time",
+        "x_axis": "Date",
+        "y_axis": "Closing Price (USD)"
+    }
 
-    # Translate to Spanish
-    date_es = translate_date(date_en, target_language="french")
-    print(f"📅 Translated Date (ES): {date_es}")
+    translated_labels = translate_chart_labels(labels, target_language="pt")
+    print(f"📊 Translated Labels: {translated_labels}")

@@ -16,9 +16,11 @@ def load_config():
         "script_dir": script_dir,
         "report": os.path.join(script_dir, config["paths"]["report"]),
         "images": os.path.join(script_dir, config["paths"]["images"]),
+        "price_charts": os.path.join(script_dir, config["paths"]["price_charts"]),
         "header_image": os.path.join(script_dir, config["paths"]["images"], "header.png"),
         "fonts": os.path.join(script_dir, config["paths"]["fonts"]), 
         "groq": config["api_keys"]["groq"],
+        "data_processed": os.path.join(script_dir, config["paths"]["data_processed"])
     }
 
     # Ensure directories exist

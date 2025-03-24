@@ -5,6 +5,7 @@ paths:
   data_raw: ../data/raw
   data_processed: ../data/processed
   images: ../images
+  price_charts: ../images/price_charts
   report: ../report
   addons: ../addons
   fonts: ../fonts
