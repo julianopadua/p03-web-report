@@ -1,4 +1,7 @@
 venv/
+latex_output/
+old/
+
 
 # Ignore Python cache files
 __pycache__/

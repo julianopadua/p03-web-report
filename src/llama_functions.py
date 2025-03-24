@@ -2,32 +2,53 @@ from groq import Groq
 import os
 from utils import load_config
 
-# Load configuration
-script_dir = os.path.dirname(os.path.abspath(__file__))
-config_dir = os.path.join(script_dir, "config.yaml")
-config = load_config(config_dir)
+paths = load_config()
 
-groq_key = config['api_keys']['groq']
+client = Groq(api_key=paths["groq"])
 
-client = Groq(api_key=groq_key)
-completion = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
-    messages=[
-        {
-            "role": "user",
-            "content": "make a question to llama "
-        },
-        {
-            "role": "assistant",
-            "content": "What are some key differences between artificial intelligence and human intelligence, and how can AI systems like yourself be used to augment human capabilities?"
-        }
-    ],
-    temperature=1,
-    max_completion_tokens=1024,
-    top_p=1,
-    stream=True,
-    stop=None,
-)
+def translate_date(date_str, target_language="pt"):
+    """
+    Ask LLaMA to translate a date into the desired language.
 
-for chunk in completion:
-    print(chunk.choices[0].delta.content or "", end="")
+    Args:
+        date_str (str): A formatted date in English (e.g., "March 24, 2025").
+        target_language (str): Target language code (e.g., "pt" for Portuguese).
+
+    Returns:
+        str: Translated date in the target language.
+    """
+    prompt = f"""
+    You are an expert translator. Translate the following date into {target_language}, maintaining natural date formatting:
+
+    English: {date_str}
+    Translated:
+    """
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_completion_tokens=50,
+            top_p=1,
+            stream=False,
+        )
+
+        translated_date = completion.choices[0].message.content.strip()
+        return translated_date
+
+    except Exception as e:
+        print(f"❌ Error contacting LLaMA: {e}")
+        return date_str  # Fallback to original date if translation fails
+
+# Example usage
+if __name__ == "__main__":
+    date_en = "March 24, 2025"
+    
+    # Translate to Portuguese
+    date_pt = translate_date(date_en, target_language="pt")
+    print(f"📅 Translated Date (PT): {date_pt}")
+
+    # Translate to Spanish
+    date_es = translate_date(date_en, target_language="french")
+    print(f"📅 Translated Date (ES): {date_es}")
