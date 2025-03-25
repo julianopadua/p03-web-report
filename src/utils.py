@@ -3,15 +3,15 @@ import yaml
 
 def load_config():
     """Load configuration from config.yaml."""
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Base script directory
-    config_path = os.path.join(script_dir, "config.yaml")   # Path to config.yaml
+    script_dir = os.path.dirname(os.path.abspath(__file__))  
+    config_path = os.path.join(script_dir, "config.yaml")   
 
     with open(config_path, "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
 
     api_keys = {"groq": config["api_keys"]["groq"]}
 
-    # Construct absolute paths based on script_dir and config.yaml values
+    # absolute paths based on script_dir and config.yaml values
     paths = {
         "script_dir": script_dir,
         "report": os.path.join(script_dir, config["paths"]["report"]),

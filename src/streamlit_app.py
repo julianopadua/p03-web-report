@@ -37,7 +37,7 @@ st.set_page_config(page_title="Company Comparison App", layout="wide")
 st.title("📊 Company Comparison Web App")
 st.write("Select companies and a language for generating a financial report.")
 
-### ✅ 1. Searchable Dropdown for Ticker Selection
+### 1. Searchable Dropdown for Ticker Selection
 selected_tickers = st.multiselect(
     "🔍 Search and Select Company Tickers", 
     options=TICKER_LIST, 
@@ -53,19 +53,19 @@ if manual_ticker:
 # Remove duplicates if a ticker is both in dropdown and manually added
 selected_tickers = list(set(selected_tickers))
 
-### ✅ 2. Searchable Dropdown for Language Selection
+### 2. Searchable Dropdown for Language Selection
 selected_language = st.selectbox(
     "🌍 Choose Report Language",
     options=list(LANGUAGE_OPTIONS.keys()),
     index=0  # Default to English
 )
 
-### ✅ 3. Display Selections
+### 3. Display Selections
 st.write("### Selected Parameters:")
 st.write(f"**📌 Companies:** {', '.join(selected_tickers) if selected_tickers else 'None selected'}")
 st.write(f"**📌 Language:** {selected_language} ({LANGUAGE_OPTIONS[selected_language]})")
 
-### ✅ 4. Generate Report Button (Enabled only if selections are valid)
+### 4. Generate Report Button (Enabled only if selections are valid)
 if selected_tickers and selected_language:
     if st.button("📝 Generate Report"):
         st.success("✅ Report is being generated... Please wait.")

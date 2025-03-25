@@ -45,7 +45,6 @@ class StockAnalysis:
             self.stock_prices = self.stock.history(period=period, interval=interval)[["Close"]]
             self.stock_prices.index = pd.to_datetime(self.stock_prices.index)
 
-            # ✅ Generate and save plot
             self.save_stock_price_plot(language)
 
         except Exception as e:
@@ -57,22 +56,18 @@ class StockAnalysis:
     def save_stock_price_plot(self, language="en"):
         """Generates and saves a stock price plot with translated labels."""
         if not self.stock_prices.empty:
-            # ✅ Define default labels (without ticker in title)
             labels = {
                 "title": "Stock Price Over Time",  # Remove ticker for translation
                 "y_axis": "Closing Price (USD)"
             }
 
-            # ✅ Translate labels if language is not English
             if language != "en":
                 translated_labels = translate_chart_labels(labels, target_language=language)
             else:
                 translated_labels = labels  # No translation needed
 
-            # ✅ Re-add the ticker to the translated title
             translated_title = f"{self.ticker} - {translated_labels['title']}"
 
-            # ✅ Generate plot with new styles
             plt.figure(figsize=(10, 5))
             plt.plot(self.stock_prices.index, self.stock_prices["Close"], label=self.ticker, color="red", linewidth=2.5)  # ✅ Thicker red line
             plt.title(translated_title, fontsize=18)
@@ -80,7 +75,6 @@ class StockAnalysis:
             plt.legend(fontsize=12)
             plt.grid(False)
 
-            # ✅ Save the translated plot
             plt.savefig(self.plot_path)
             plt.close()  # Free memory
             print(f"✅ Saved stock price plot for {self.ticker} in {language}: {self.plot_path}")
@@ -114,7 +108,7 @@ class StockAnalysis:
 
 
 def analyze_multiple_tickers(tickers, language):
-    """Fetches data for multiple tickers and saves organized CSV files."""
+    """Fetches data for multiple tickers"""
     results = {}
 
     output_dir = os.path.join(paths["data_processed"])
@@ -126,7 +120,7 @@ def analyze_multiple_tickers(tickers, language):
         # Gather data
         description = stock.get_company_description()
         financial_ratios = stock.get_financial_ratios()
-        plot_path = stock.plot_path  # ✅ Store plot path for reference
+        plot_path = stock.plot_path  
 
         results[ticker] = {
             "Description": description,
@@ -152,25 +146,25 @@ def generate_stock_analysis_text(ticker, stock_prices):
     if stock_prices is None or stock_prices.empty:
         return f"No stock price data available for {ticker}."
 
-    # ✅ Extract relevant price points
+    # extract relevant price points
     latest_close = stock_prices["Close"].iloc[-1]
     one_week_ago = stock_prices["Close"].iloc[-6] if len(stock_prices) > 6 else None
     one_month_ago = stock_prices["Close"].iloc[-22] if len(stock_prices) > 22 else None
     one_year_ago = stock_prices["Close"].iloc[-252] if len(stock_prices) > 252 else None
 
-    # ✅ 52-week high & low
+    # 52-week high & low
     high_52w = stock_prices["Close"].rolling(window=252, min_periods=1).max().iloc[-1]
     low_52w = stock_prices["Close"].rolling(window=252, min_periods=1).min().iloc[-1]
 
-    # ✅ Moving Averages
+    # Moving Averages
     ma_5 = stock_prices["Close"].rolling(window=5).mean().iloc[-1]
     ma_10 = stock_prices["Close"].rolling(window=10).mean().iloc[-1]
     ma_30 = stock_prices["Close"].rolling(window=30).mean().iloc[-1]
 
-    # 🔹 Start generating text
+    # Start generating text
     text = f"{ticker} closed at {latest_close:.2f} USD.\n"
 
-    # ✅ 52-week high/low comparison
+    # 52-week high/low comparison
     if latest_close == high_52w:
         text += "This is the highest closing price in the past 52 weeks!\n"
     else:
@@ -183,25 +177,25 @@ def generate_stock_analysis_text(ticker, stock_prices):
         diff_low = latest_close - low_52w
         text += f"This price is {diff_low:.2f} USD above the 52-week low of {low_52w:.2f}.\n"
 
-    # ✅ Week-over-week comparison
+    # Week-over-week comparison
     if one_week_ago:
         week_diff = latest_close - one_week_ago
         direction = "above" if week_diff > 0 else "below"
         text += f"Today's close was {abs(week_diff):.2f} USD {direction} last week's close of {one_week_ago:.2f}.\n"
 
-    # ✅ Month-over-month comparison
+    # Month-over-month comparison
     if one_month_ago:
         month_diff = latest_close - one_month_ago
         direction = "above" if month_diff > 0 else "below"
         text += f"Today's close was {abs(month_diff):.2f} USD {direction} the close one month ago ({one_month_ago:.2f}).\n"
 
-    # ✅ Year-over-year comparison
+    # Year-over-year comparison
     if one_year_ago:
         year_diff = latest_close - one_year_ago
         direction = "above" if year_diff > 0 else "below"
         text += f"Today's close was {abs(year_diff):.2f} USD {direction} the close one year ago ({one_year_ago:.2f}).\n"
 
-    # ✅ Moving Average Analysis
+    # Moving Average Analysis
     if latest_close > ma_5:
         text += f"The stock is currently trading above its 5-day moving average ({ma_5:.2f}).\n"
     else:
@@ -230,7 +224,7 @@ if __name__ == "__main__":
         print(f"📌 {ticker} - {data['Description'].get('Name', 'N/A')}")
         print("=" * 50)
 
-        # 📖 Company Description
+        # company Description
         print(f"\n📝 **Company Description:**\n{data['Description'].get('Summary', 'N/A')}")
         print(f"🔹 Sector: {data['Description'].get('Sector', 'N/A')}")
         print(f"🔹 Industry: {data['Description'].get('Industry', 'N/A')}")
@@ -238,12 +232,12 @@ if __name__ == "__main__":
         print(f"🔹 Country: {data['Description'].get('Country', 'N/A')}")
         print(f"🔹 Website: {data['Description'].get('Website', 'N/A')}")
 
-        # 💰 Financial Ratios
+        # financial Ratios
         print("\n📊 **Financial Ratios:**")
         for key, value in data["Financial Ratios"].items():
             print(f"🔹 {key}: {value}")
 
-        # 📈 Stock Price Series (Last 5 Data Points)
+        # stock Price Series (Last 5 Data Points)
         stock_prices = data["Stock Prices"]
         if not stock_prices.empty:
             print("\n📈 **Stock Price Series (Last 5 Days):**")
@@ -251,7 +245,7 @@ if __name__ == "__main__":
         else:
             print("\n⚠️ No stock price data available.")
 
-        # 📊 Saved Plot Path
+        # saved Plot Path
         print(f"\n🖼️ Stock price plot saved at: {data['Plot Path']}")
 
         print("\n" + "=" * 50)

@@ -33,8 +33,8 @@ def translate_text(text, target_language="pt"):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.5,  # ✅ Lower temperature for more accurate translations
-            max_completion_tokens=200,  # ✅ Increased token limit for longer texts
+            temperature=0.5,  
+            max_completion_tokens=200,  
             top_p=1,
             stream=False,
         )
@@ -44,7 +44,7 @@ def translate_text(text, target_language="pt"):
 
     except Exception as e:
         print(f"❌ Error contacting LLaMA: {e}")
-        return text  # ✅ Return original text as fallback
+        return text  
 
 
 def translate_chart_labels(labels_dict, target_language="pt"):
