@@ -61,14 +61,12 @@ class StockAnalysis:
 
         return self.stock_prices
 
-
     def save_stock_price_plot(self, language="pt"):
         """Generates and saves a stock price plot with translated labels."""
         if not self.stock_prices.empty:
             # ✅ Define default labels (without ticker in title)
             labels = {
                 "title": "Stock Price Over Time",  # Remove ticker for translation
-                "x_axis": "Date",
                 "y_axis": "Closing Price (USD)"
             }
 
@@ -81,14 +79,13 @@ class StockAnalysis:
             # ✅ Re-add the ticker to the translated title
             translated_title = f"{self.ticker} - {translated_labels['title']}"
 
-            # ✅ Generate plot using translated labels
+            # ✅ Generate plot with new styles
             plt.figure(figsize=(10, 5))
-            plt.plot(self.stock_prices.index, self.stock_prices["Close"], label=self.ticker, color="blue")
-            plt.title(translated_title)
-            plt.xlabel(translated_labels["x_axis"])
-            plt.ylabel(translated_labels["y_axis"])
-            plt.legend()
-            plt.grid(True)
+            plt.plot(self.stock_prices.index, self.stock_prices["Close"], label=self.ticker, color="red", linewidth=2.5)  # ✅ Thicker red line
+            plt.title(translated_title, fontsize=18)
+            plt.ylabel(translated_labels["y_axis"], fontsize=16) 
+            plt.legend(fontsize=12)
+            plt.grid(False)
 
             # ✅ Save the translated plot
             plt.savefig(self.plot_path)
@@ -124,19 +121,110 @@ class StockAnalysis:
 
 
 def analyze_multiple_tickers(tickers):
-    """Fetches data for multiple tickers."""
+    """Fetches data for multiple tickers and saves organized CSV files."""
     results = {}
+
+    output_dir = os.path.join(paths["data_processed"])
+    os.makedirs(output_dir, exist_ok=True)
 
     for ticker in tickers:
         stock = StockAnalysis(ticker)
-        results[ticker] = {
-            "Description": stock.get_company_description(),
-            "Stock Prices": stock.get_stock_price_series(),
-            "Financial Ratios": stock.get_financial_ratios(),
-            "Plot Path": stock.plot_path,  # ✅ Store plot path for later use
-        }
+        
+        # Gather data
+        description = stock.get_company_description()
+        financial_ratios = stock.get_financial_ratios()
+        plot_path = stock.plot_path  # ✅ Store plot path for reference
 
+        results[ticker] = {
+            "Description": description,
+            "Stock Prices": stock.get_stock_price_series(),
+            "Financial Ratios": financial_ratios,
+            "Plot Path": plot_path,
+        }
+    
     return results
+
+def generate_stock_analysis_text(ticker, stock_prices):
+    """
+    Generates a conditional text analysis based on stock price movements.
+
+    Args:
+        ticker (str): Stock ticker symbol (e.g., "AAPL").
+        stock_prices (pd.DataFrame): DataFrame containing historical stock prices 
+                                     with a "Close" column.
+
+    Returns:
+        str: Analysis text summarizing key stock price movements.
+    """
+    if stock_prices is None or stock_prices.empty:
+        return f"No stock price data available for {ticker}."
+
+    # ✅ Extract relevant price points
+    latest_close = stock_prices["Close"].iloc[-1]
+    one_week_ago = stock_prices["Close"].iloc[-6] if len(stock_prices) > 6 else None
+    one_month_ago = stock_prices["Close"].iloc[-22] if len(stock_prices) > 22 else None
+    one_year_ago = stock_prices["Close"].iloc[-252] if len(stock_prices) > 252 else None
+
+    # ✅ 52-week high & low
+    high_52w = stock_prices["Close"].rolling(window=252, min_periods=1).max().iloc[-1]
+    low_52w = stock_prices["Close"].rolling(window=252, min_periods=1).min().iloc[-1]
+
+    # ✅ Moving Averages
+    ma_5 = stock_prices["Close"].rolling(window=5).mean().iloc[-1]
+    ma_10 = stock_prices["Close"].rolling(window=10).mean().iloc[-1]
+    ma_30 = stock_prices["Close"].rolling(window=30).mean().iloc[-1]
+
+    # 🔹 Start generating text
+    text = f"{ticker} closed at {latest_close:.2f} USD.\n"
+
+    # ✅ 52-week high/low comparison
+    if latest_close == high_52w:
+        text += "This is the highest closing price in the past 52 weeks!\n"
+    else:
+        diff_high = high_52w - latest_close
+        text += f"This price is {diff_high:.2f} USD below the 52-week high of {high_52w:.2f}.\n"
+
+    if latest_close == low_52w:
+        text += "This is the lowest closing price in the past 52 weeks!\n"
+    else:
+        diff_low = latest_close - low_52w
+        text += f"This price is {diff_low:.2f} USD above the 52-week low of {low_52w:.2f}.\n"
+
+    # ✅ Week-over-week comparison
+    if one_week_ago:
+        week_diff = latest_close - one_week_ago
+        direction = "above" if week_diff > 0 else "below"
+        text += f"Today's close was {abs(week_diff):.2f} USD {direction} last week's close of {one_week_ago:.2f}.\n"
+
+    # ✅ Month-over-month comparison
+    if one_month_ago:
+        month_diff = latest_close - one_month_ago
+        direction = "above" if month_diff > 0 else "below"
+        text += f"Today's close was {abs(month_diff):.2f} USD {direction} the close one month ago ({one_month_ago:.2f}).\n"
+
+    # ✅ Year-over-year comparison
+    if one_year_ago:
+        year_diff = latest_close - one_year_ago
+        direction = "above" if year_diff > 0 else "below"
+        text += f"Today's close was {abs(year_diff):.2f} USD {direction} the close one year ago ({one_year_ago:.2f}).\n"
+
+    # ✅ Moving Average Analysis
+    if latest_close > ma_5:
+        text += f"The stock is currently trading above its 5-day moving average ({ma_5:.2f}).\n"
+    else:
+        text += f"The stock is below its 5-day moving average ({ma_5:.2f}).\n"
+
+    if latest_close > ma_10:
+        text += f"It is also above the 10-day moving average ({ma_10:.2f}).\n"
+    else:
+        text += f"It is below the 10-day moving average ({ma_10:.2f}).\n"
+
+    if latest_close > ma_30:
+        text += f"The stock remains above the 30-day moving average ({ma_30:.2f}).\n"
+    else:
+        text += f"The stock is trading below the 30-day moving average ({ma_30:.2f}).\n"
+
+    return text
 
 
 if __name__ == "__main__":

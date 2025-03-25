@@ -1,26 +1,29 @@
 import os
+import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
 from utils import load_config
-from llama_functions import translate_date
+from llama_functions import translate_date, format_description
+from analysis import analyze_multiple_tickers, generate_stock_analysis_text
 
 class CustomPDF(FPDF):
-    def __init__(self, paths, language="en"):
+    def __init__(self, paths, ticker_data, language="en"):
         super().__init__()
         self.paths = paths  # Load all necessary paths
         self.language = language
+        self.ticker_data = ticker_data
 
         self.add_font("Lato", "", os.path.join(self.paths["fonts"], "Lato-Regular.ttf"), uni=True)
         self.add_font("Lato", "B", os.path.join(self.paths["fonts"], "Lato-Bold.ttf"), uni=True)
         self.add_font("Lato", "BL", os.path.join(self.paths["fonts"], "Lato-Black.ttf"), uni=True)
+        self.add_font("Lato", "I", os.path.join(self.paths["fonts"], "Lato-Italic.ttf"), uni=True)
 
         self.set_auto_page_break(auto=True, margin=15)  # Ensure content doesn't overlap footer
 
     def format_date(self):
         """Generate the date in English and translate it only if necessary."""
-        date_en = datetime.now().strftime("%B %d, %Y")  # ✅ Always generate in English
+        date_en = datetime.now().strftime("%B %d, %Y") 
 
-        # ✅ Only translate if the language is NOT English
         if self.language != "en":
             return translate_date(date_en, target_language=self.language)
         
@@ -40,39 +43,119 @@ class CustomPDF(FPDF):
         self.set_x(-50)
         self.cell(48, 10, f"{self.format_date()}", ln=True, align="R")
 
-    def generate_report(self, title, content):
-        """Generates a PDF report with headers on each page."""
-        self.add_page()  # Each new page automatically calls `header()`
+    def generate_report(self):
+        """Generates a PDF report comparing tickers in a two-column format."""
+        self.add_page()
+        tickers = list(self.ticker_data.keys())
 
-        # Title
-        self.set_font("Lato", "B", 16)
-        self.cell(0, 10, title, ln=True, align="C")
+        for i in range(0, len(tickers), 2):
+            ticker1 = tickers[i]
+            ticker2 = tickers[i + 1] if i + 1 < len(tickers) else None  # Second ticker (if available)
 
-        self.ln(10)  # Space after title
-        self.set_font("Lato", "", 12)
+            # ✅ Fixed starting positions
+            col1_x, col2_x = 5, 105
+            start_y = self.get_y()
 
-        # Add Content
-        for line in content:
-            self.multi_cell(0, 10, line)
-            self.ln(2)
+            # ✅ Add first column
+            self.add_column(ticker1, col1_x, start_y)
 
-        # Save PDF in the report folder
+            # ✅ Add second column (if exists)
+            if ticker2:
+                self.add_column(ticker2, col2_x, start_y)
+
+            # Insert financial ratios table
+            self.ln(5)
+            self.insert_financial_ratios_table(ticker1, ticker2)
+
+            # Add a new page every two tickers
+            if i + 2 < len(tickers):
+                self.add_page()
+
+        # Save the PDF
         pdf_filename = os.path.join(self.paths["report"], "financial_report.pdf")
         self.output(pdf_filename)
         print(f"✅ PDF saved at: {pdf_filename}")
 
-# 1️⃣ Load centralized paths from utils.py
+
+    def add_column(self, ticker, x_pos, start_y):
+        """Adds a company's section (title + chart) at a fixed Y position."""
+        self.set_xy(x_pos, start_y)  # ✅ Ensure both columns start at the same Y
+
+        # ✅ Title
+        self.set_x(x_pos + 5)
+        self.set_font("Lato", "B", 14)
+        self.cell(90, 10, ticker, ln=True, align="C")
+        self.ln(5)
+
+        # ✅ Chart
+        self.insert_chart(ticker, x_pos, start_y + 8) 
+
+        # ✅ Stock Analysis Text (Below Chart)
+        self.set_font("Lato", "", 11)
+        self.set_xy(x_pos, self.get_y() + 5)  # ✅ Adjust Y position below chart
+
+        stock_prices = self.ticker_data[ticker]["Stock Prices"]
+        analysis_text = generate_stock_analysis_text(ticker, stock_prices)  # ✅ Generate text
+        self.multi_cell(90, 6, analysis_text)  # ✅ Display the text properly
+        self.ln(5)  # ✅ Space before the financial ratios table
+
+
+    def insert_chart(self, ticker, x_pos, y_pos):
+        """Inserts the stock price chart for a given ticker at a specific x and y position."""
+        images_dir = os.path.join(self.paths["images"], "price_charts")
+        matching_images = [f for f in os.listdir(images_dir) if f.startswith(ticker)]
+
+        if not matching_images:
+            self.set_xy(x_pos, y_pos)
+            self.cell(90, 10, f"No plot available for {ticker}.", ln=True, align="C")
+            return
+
+        image_path = os.path.join(images_dir, matching_images[0])
+
+        # ✅ Ensure images start at the same Y level
+        self.image(image_path, x=x_pos, y=y_pos, w=105, h=65)
+        new_y = y_pos + 63  # ✅ Move down after image
+
+        # ✅ Explicitly set Y position for "Source"
+        self.set_xy(x_pos + 5, new_y)  
+        self.set_font("Lato", "I", 9)
+        self.cell(90, 5, "Source: Yahoo Finance", ln=True, align="R")
+
+
+    def insert_financial_ratios_table(self, ticker1, ticker2):
+        """Displays financial ratios in a table format with tickers as columns."""
+        data1 = self.ticker_data[ticker1]["Financial Ratios"]
+        data2 = self.ticker_data[ticker2]["Financial Ratios"] if ticker2 else {}
+
+        # Extract all available financial ratio keys
+        ratio_keys = sorted(set(data1.keys()).union(set(data2.keys())))
+
+        self.ln(5)
+        self.set_font("Lato", "B", 12)
+        self.cell(90, 8, "Financial Ratios", border=1, align="C")
+        self.cell(45, 8, ticker1, border=1, align="C")
+        if ticker2:
+            self.cell(45, 8, ticker2, border=1, align="C")
+        self.ln()
+
+        # Insert each financial ratio as a row
+        self.set_font("Lato", "", 12)
+        for ratio in ratio_keys:
+            if str(data1.get(ratio, "-")) == "N/A" or str(data2.get(ratio, "-")) == "N/A":
+                pass
+            self.cell(90, 8, ratio, border=1)
+            self.cell(45, 8, str(data1.get(ratio, "-")), border=1, align="C")
+            if ticker2:
+                self.cell(45, 8, str(data2.get(ratio, "-")), border=1, align="C")
+            self.ln()
+
+# ✅ Load paths
 paths = load_config()
 
-# 2️⃣ Generate PDF Example
+# ✅ Example usage
 if __name__ == "__main__":
-    pdf = CustomPDF(paths)
+    tickers = ["AAPL", "GOOGL"]  # Example tickers
+    ticker_data = analyze_multiple_tickers(tickers)  # Fetch analysis data dynamically
 
-    content = [
-        "This is a financial report generated using FPDF and Python.",
-        "It includes a dynamic header with an image and the current date on every page.",
-        "This example demonstrates multi-page content handling.",
-        "\n".join(["More sample text to force a page break."] * 50)  # Forces multiple pages
-    ]
-
-    pdf.generate_report("Financial Report", content)
+    pdf = CustomPDF(paths, ticker_data)
+    pdf.generate_report()
