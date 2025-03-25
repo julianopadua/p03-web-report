@@ -11,6 +11,3 @@ __pycache__/
 # Ignore config and logs
 *.log
 
-*.xlsx
-*.xls
-*.csv

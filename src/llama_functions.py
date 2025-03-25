@@ -6,6 +6,46 @@ paths = load_config()
 
 client = Groq(api_key=paths["groq"])
 
+def translate_text(text, target_language="pt"):
+    """
+    Translates text into the desired language using LLaMA.
+
+    Args:
+        text (str): The text to be translated.
+        target_language (str): Target language code (e.g., "pt" for Portuguese).
+
+    Returns:
+        str: The translated text.
+    """
+    if not text:
+        return ""
+
+    prompt = f"""
+    You are a professional translator. Translate the following text into {target_language}, 
+    keeping it concise and appropriate. Never send more than one option of translation. Send only the text translated. Only!:
+
+    {text}
+
+    Send only the translated text, nothing more. No other translating options, just one single translation to the text sended to you.
+    """
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,  # ✅ Lower temperature for more accurate translations
+            max_completion_tokens=200,  # ✅ Increased token limit for longer texts
+            top_p=1,
+            stream=False,
+        )
+    
+        translated_text = completion.choices[0].message.content.strip()
+        return translated_text
+
+    except Exception as e:
+        print(f"❌ Error contacting LLaMA: {e}")
+        return text  # ✅ Return original text as fallback
+
 
 def translate_chart_labels(labels_dict, target_language="pt"):
     """
@@ -124,6 +164,52 @@ def format_description(description, target_language="en"):
     except Exception as e:
         print(f"❌ Error contacting LLaMA: {e}")
         return description  # Fallback to original description if translation fails
+
+def format_stock_analysis(analysis_text, target_language="en"):
+    """
+    Uses LLaMA to clean, refine, and translate the stock analysis text into a professional corporate financial style.
+
+    Args:
+        analysis_text (str): The raw stock analysis text generated from stock data.
+        target_language (str): Target language code (e.g., "pt" for Portuguese).
+
+    Returns:
+        str: A well-structured, refined financial analysis in the target language.
+    """
+    if not analysis_text:
+        return "No analysis available."
+
+    prompt = f"""
+    You are a professional financial analyst. Improve and refine the following stock analysis,
+    making it objective, well-structured, and suited for corporate financial reports. Then, translate 
+    it into {target_language}. Ensure the analysis is concise, data-driven, and maintains a 
+    professional tone.
+    The analysis must be objective and with a max of 2 paragraphs. Each paragraph must be short. No space shoud be added between paragraphs.
+    Be more objective in the weekly and monthly comparasions. The text must be short.
+
+    Raw Analysis:
+    {analysis_text}
+
+    Objective & Translated Analysis (Send me only the improved analysis text, with no titles):
+    """
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            max_completion_tokens=200,
+            top_p=1,
+            stream=False,
+        )
+
+        formatted_analysis = completion.choices[0].message.content.strip()
+        
+        return formatted_analysis
+
+    except Exception as e:
+        print(f"❌ Error contacting LLaMA: {e}")
+        return analysis_text  # Fallback to original analysis if translation fails
 
 # Example usage
 if __name__ == "__main__":

@@ -3,14 +3,15 @@ import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
 from utils import load_config
-from llama_functions import translate_date, format_description
+from llama_functions import translate_date, format_description, translate_text
 from analysis import analyze_multiple_tickers, generate_stock_analysis_text
 
 class CustomPDF(FPDF):
-    def __init__(self, paths, ticker_data, language="en"):
+    def __init__(self, paths, ticker_data, language):
         super().__init__()
         self.paths = paths  # Load all necessary paths
         self.language = language
+        print(f"Language: {self.language}")
         self.ticker_data = ticker_data
 
         self.add_font("Lato", "", os.path.join(self.paths["fonts"], "Lato-Regular.ttf"), uni=True)
@@ -72,7 +73,8 @@ class CustomPDF(FPDF):
                 self.add_page()
 
         # Save the PDF
-        pdf_filename = os.path.join(self.paths["report"], "financial_report.pdf")
+        today_date = datetime.today().strftime("%Y_%m_%d")  # Format: YYYY_MM_DD
+        pdf_filename = os.path.join(self.paths["report"], f"financial_report_{today_date}.pdf")
         self.output(pdf_filename)
         print(f"✅ PDF saved at: {pdf_filename}")
 
@@ -92,12 +94,12 @@ class CustomPDF(FPDF):
 
         # ✅ Stock Analysis Text (Below Chart)
         self.set_font("Lato", "", 11)
-        self.set_xy(x_pos, self.get_y() + 5)  # ✅ Adjust Y position below chart
+        self.set_xy(x_pos + 5, self.get_y() + 5)  # ✅ Adjust Y position below chart
 
         stock_prices = self.ticker_data[ticker]["Stock Prices"]
         analysis_text = generate_stock_analysis_text(ticker, stock_prices)  # ✅ Generate text
-        self.multi_cell(90, 6, analysis_text)  # ✅ Display the text properly
-        self.ln(5)  # ✅ Space before the financial ratios table
+        self.multi_cell(90, 6, translate_text(analysis_text, self.language))  # ✅ Display the text properly
+        self.ln(10)  # ✅ Space before the financial ratios table
 
 
     def insert_chart(self, ticker, x_pos, y_pos):
@@ -119,7 +121,7 @@ class CustomPDF(FPDF):
         # ✅ Explicitly set Y position for "Source"
         self.set_xy(x_pos + 5, new_y)  
         self.set_font("Lato", "I", 9)
-        self.cell(90, 5, "Source: Yahoo Finance", ln=True, align="R")
+        self.cell(90, 5, translate_text("Source: Yahoo Finance", self.language), ln=True, align="R")
 
 
     def insert_financial_ratios_table(self, ticker1, ticker2):
@@ -132,21 +134,21 @@ class CustomPDF(FPDF):
 
         self.ln(5)
         self.set_font("Lato", "B", 12)
-        self.cell(90, 8, "Financial Ratios", border=1, align="C")
-        self.cell(45, 8, ticker1, border=1, align="C")
+        self.cell(90, 8, translate_text("Financial Ratios", self.language), border=1, align="C")
+        self.cell(50, 8, ticker1, border=1, align="C")
         if ticker2:
-            self.cell(45, 8, ticker2, border=1, align="C")
+            self.cell(50, 8, ticker2, border=1, align="C")
         self.ln()
 
         # Insert each financial ratio as a row
-        self.set_font("Lato", "", 12)
+        self.set_font("Lato", "", 10)
         for ratio in ratio_keys:
-            if str(data1.get(ratio, "-")) == "N/A" or str(data2.get(ratio, "-")) == "N/A":
-                pass
-            self.cell(90, 8, ratio, border=1)
-            self.cell(45, 8, str(data1.get(ratio, "-")), border=1, align="C")
+            if str(data1.get(ratio, "-")) == "N/A" or str(data2.get(ratio, "-")) == "N/A" or str(ratio) == "Market Cap (USD)" or str(ratio) == "Enterprise Value (USD)" or str(ratio) == "52-Week Low" or str(ratio) == "52-Week High":
+                continue
+            self.cell(90, 8, translate_text(ratio, self.language), border=1)
+            self.cell(50, 8, str(data1.get(ratio, "-")), border=1, align="C")
             if ticker2:
-                self.cell(45, 8, str(data2.get(ratio, "-")), border=1, align="C")
+                self.cell(50, 8, str(data2.get(ratio, "-")), border=1, align="C")
             self.ln()
 
 # ✅ Load paths
@@ -154,8 +156,8 @@ paths = load_config()
 
 # ✅ Example usage
 if __name__ == "__main__":
-    tickers = ["AAPL", "GOOGL"]  # Example tickers
-    ticker_data = analyze_multiple_tickers(tickers)  # Fetch analysis data dynamically
+    tickers = ["AAPL", "GOOGL", "AMER3.SA", "LREN3.SA"]  # Example tickers
+    ticker_data = analyze_multiple_tickers(tickers, language='pt')  # Fetch analysis data dynamically
 
     pdf = CustomPDF(paths, ticker_data)
     pdf.generate_report()

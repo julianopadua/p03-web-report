@@ -4,73 +4,91 @@ import pandas as pd
 import datetime
 import os
 from utils import load_config
+from generate_pdf import analyze_multiple_tickers, CustomPDF  # Importing PDF generation functions
 
-# Load configuration
-script_dir = os.path.dirname(os.path.abspath(__file__))
-config_dir = os.path.join(script_dir, "config.yaml")
-config = load_config(config_dir)
+paths = load_config()
 
-# Initialize paths from config
-data_raw_path = os.path.join(script_dir, config['paths']['data_raw'])
-data_processed_path = os.path.join(script_dir, config['paths']['data_processed'])
-images_path = os.path.join(script_dir, config['paths']['images'])
-report_path = os.path.join(script_dir, config['paths']['report'])
-addons_path = os.path.join(script_dir, config['paths']['addons'])
+# Load ticker data from stocks.csv
+STOCKS_CSV = os.path.join(paths["data_processed"], "stocks.csv")
 
-# Set up the Streamlit page
-st.set_page_config(page_title="Company Comparison App", layout="wide")
+def load_tickers():
+    """Load tickers from stocks.csv and return a sorted list."""
+    if os.path.exists(STOCKS_CSV):
+        df = pd.read_csv(STOCKS_CSV)
+        if "Name" in df.columns:
+            return sorted(df["Name"].dropna().unique().tolist())  # Ensure no duplicates and sorted
+    return []  # Return an empty list if file not found
 
-st.title("📊 Company Comparison Web App")
-st.write("Select companies and languages for generating a financial report.")
+# Get tickers dynamically
+TICKER_LIST = load_tickers()
 
-### ✅ 1. Searchable Dropdown for Ticker Selection
-# Load ticker list (can be from API, database, or a static list)
-TICKER_LIST = [
-    "AAPL", "GOOGL", "AMZN", "MSFT", "TSLA", "META", "NVDA", "BRK.A", "JPM", "V",
-    "UNH", "PG", "XOM", "JNJ", "WMT", "BAC", "HD", "PFE", "KO", "PEP"
-]  # Example list, you can expand
-
-selected_tickers = st.multiselect(
-    "🔍 Search and Select Company Tickers", 
-    options=TICKER_LIST, 
-    default=[], 
-    placeholder="Type to search (e.g., AAPL, GOOGL)"
-)
-
-### ✅ 2. Searchable Dropdown for Language Selection
+# Language options with added Italian
 LANGUAGE_OPTIONS = {
     "English": "en",
     "Português (Brasil)": "pt",
     "Español": "es",
     "Français": "fr",
     "Deutsch": "de",
-    "中文 (Chinese)": "zh",
-    "日本語 (Japanese)": "ja",
-    "Русский (Russian)": "ru",
-    "हिन्दी (Hindi)": "hi",
-    "العربية (Arabic)": "ar"
+    "Italiano": "it"
 }
 
+# Set up the Streamlit page
+st.set_page_config(page_title="Company Comparison App", layout="wide")
+st.title("📊 Company Comparison Web App")
+st.write("Select companies and a language for generating a financial report.")
+
+### ✅ 1. Searchable Dropdown for Ticker Selection
+selected_tickers = st.multiselect(
+    "🔍 Search and Select Company Tickers", 
+    options=TICKER_LIST, 
+    default=[], 
+    placeholder="Type to search (e.g., AAPL, GOOGL) or enter manually"
+)
+
+# Allow user to manually add a ticker
+manual_ticker = st.text_input("✏️ Or enter a ticker manually (if not in the list)")
+if manual_ticker:
+    selected_tickers.append(manual_ticker.strip().upper())  # Ensure uppercase formatting
+
+# Remove duplicates if a ticker is both in dropdown and manually added
+selected_tickers = list(set(selected_tickers))
+
+### ✅ 2. Searchable Dropdown for Language Selection
 selected_language = st.selectbox(
     "🌍 Choose Report Language",
     options=list(LANGUAGE_OPTIONS.keys()),
-    index=0,  # Default to English
-    placeholder="Start typing (e.g., 'Port...')"
+    index=0  # Default to English
 )
 
-### ✅ 3. Display Selections and Generate Report Button
+### ✅ 3. Display Selections
 st.write("### Selected Parameters:")
 st.write(f"**📌 Companies:** {', '.join(selected_tickers) if selected_tickers else 'None selected'}")
 st.write(f"**📌 Language:** {selected_language} ({LANGUAGE_OPTIONS[selected_language]})")
 
-# Generate Report Button
-if st.button("📝 Generate Report"):
-    if not selected_tickers:
-        st.error("⚠️ Please select at least one company ticker!")
-    else:
-        st.success("✅ Report is being generated... (Placeholder for PDF generation)")
-        # Here, call your report generation function
-        # generate_pdf_report(selected_tickers, LANGUAGE_OPTIONS[selected_language])
+### ✅ 4. Generate Report Button (Enabled only if selections are valid)
+if selected_tickers and selected_language:
+    if st.button("📝 Generate Report"):
+        st.success("✅ Report is being generated... Please wait.")
+
+        # Call PDF generation
+        ticker_data = analyze_multiple_tickers(selected_tickers, language=LANGUAGE_OPTIONS[selected_language])
+        pdf = CustomPDF(paths, ticker_data, language=LANGUAGE_OPTIONS[selected_language])
+        pdf.generate_report()
+
+        today_date = datetime.datetime.now().strftime("%Y_%m_%d")  # Format: YYYY_MM_DD
+        pdf_filename = f"financial_report_{today_date}.pdf"  # Define a name for the report
+        pdf_path = os.path.join(paths["report"], pdf_filename)
+
+        if os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as pdf_file:
+                st.download_button(
+                    label="📥 Download Report",
+                    data=pdf_file,
+                    file_name=pdf_filename,
+                    mime="application/pdf"
+                )
+        else:
+            st.error("⚠️ Report generation failed. Please try again.")
 
 # Footer
 st.markdown("---")

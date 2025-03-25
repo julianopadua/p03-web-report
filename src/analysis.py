@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from utils import load_config
-from llama_functions import translate_chart_labels
+from llama_functions import translate_chart_labels, format_stock_analysis
 
 # Load paths from config.yaml
 paths = load_config()
@@ -39,21 +39,14 @@ class StockAnalysis:
 
         return self.company_info
 
-    def get_stock_price_series(self, period="1y", interval="1d"):
+    def get_stock_price_series(self, language, period="1y", interval="1d"):
         """Fetches historical stock prices, saves it as a CSV, and generates a plot."""
         try:
             self.stock_prices = self.stock.history(period=period, interval=interval)[["Close"]]
             self.stock_prices.index = pd.to_datetime(self.stock_prices.index)
 
-            # ✅ Define CSV file path in `data_processed`
-            csv_path = os.path.join(paths["data_processed"], f"{self.ticker}_daily_data.csv")
-
-            # ✅ Save stock price data to CSV
-            self.stock_prices.to_csv(csv_path)
-            print(f"✅ Saved stock price data for {self.ticker} to {csv_path}")
-
             # ✅ Generate and save plot
-            self.save_stock_price_plot()
+            self.save_stock_price_plot(language)
 
         except Exception as e:
             print(f"⚠️ Error fetching stock data for {self.ticker}: {e}")
@@ -61,7 +54,7 @@ class StockAnalysis:
 
         return self.stock_prices
 
-    def save_stock_price_plot(self, language="pt"):
+    def save_stock_price_plot(self, language="en"):
         """Generates and saves a stock price plot with translated labels."""
         if not self.stock_prices.empty:
             # ✅ Define default labels (without ticker in title)
@@ -120,7 +113,7 @@ class StockAnalysis:
         return financials
 
 
-def analyze_multiple_tickers(tickers):
+def analyze_multiple_tickers(tickers, language):
     """Fetches data for multiple tickers and saves organized CSV files."""
     results = {}
 
@@ -137,7 +130,7 @@ def analyze_multiple_tickers(tickers):
 
         results[ticker] = {
             "Description": description,
-            "Stock Prices": stock.get_stock_price_series(),
+            "Stock Prices": stock.get_stock_price_series(language),
             "Financial Ratios": financial_ratios,
             "Plot Path": plot_path,
         }
@@ -224,7 +217,7 @@ def generate_stock_analysis_text(ticker, stock_prices):
     else:
         text += f"The stock is trading below the 30-day moving average ({ma_30:.2f}).\n"
 
-    return text
+    return format_stock_analysis(text)
 
 
 if __name__ == "__main__":
