@@ -4,3 +4,5 @@ matplotlib
 datetime
 pyyaml
 streamlit
+groq
+yfinance
