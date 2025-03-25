@@ -1,4 +1,5 @@
 pandas
+fpdf
 matplotlib
 datetime
 pyyaml
