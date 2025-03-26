@@ -24,12 +24,12 @@ TICKER_LIST = load_tickers()
 
 # Language options with added Italian
 LANGUAGE_OPTIONS = {
-    "English": "en",
+    "English": "english",
     "Português (Brasil)": "pt",
-    "Español": "es",
-    "Français": "fr",
+    "Español": "spanish",
+    "Français": "french",
     "Deutsch": "de",
-    "Italiano": "it"
+    "Italiano": "italian"
 }
 
 # Set up the Streamlit page

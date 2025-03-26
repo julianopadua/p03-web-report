@@ -6,7 +6,7 @@ paths = load_config()
 
 client = Groq(api_key=paths["groq"])
 
-def translate_text(text, target_language="pt"):
+def translate_text(text, target_language):
     """
     Translates text into the desired language using LLaMA.
 
@@ -38,7 +38,7 @@ def translate_text(text, target_language="pt"):
             top_p=1,
             stream=False,
         )
-    
+        
         translated_text = completion.choices[0].message.content.strip()
         return translated_text
 
@@ -47,7 +47,7 @@ def translate_text(text, target_language="pt"):
         return text  
 
 
-def translate_chart_labels(labels_dict, target_language="pt"):
+def translate_chart_labels(labels_dict, target_language):
     """
     Translates chart-related labels (title, axis labels) into the desired language using LLaMA.
 
@@ -88,7 +88,7 @@ def translate_chart_labels(labels_dict, target_language="pt"):
         print(f"❌ Error contacting LLaMA: {e} - {labels_dict}")
         return labels_dict  # Fallback to original labels if translation fails
 
-def translate_date(date_str, target_language="pt"):
+def translate_date(date_str, target_language):
     """
     Ask LLaMA to translate a date into the desired language.
 
@@ -123,7 +123,7 @@ def translate_date(date_str, target_language="pt"):
         print(f"❌ Error contacting LLaMA: {e}")
         return date_str  # Fallback to original date if translation fails
 
-def format_description(description, target_language="en"):
+def format_description(description, target_language):
     """
     Uses LLaMA to clean, format, and translate a company description.
 
@@ -165,7 +165,7 @@ def format_description(description, target_language="en"):
         print(f"❌ Error contacting LLaMA: {e}")
         return description  # Fallback to original description if translation fails
 
-def format_stock_analysis(analysis_text, target_language="en"):
+def format_stock_analysis(analysis_text, target_language):
     """
     Uses LLaMA to clean, refine, and translate the stock analysis text into a professional corporate financial style.
 
@@ -202,7 +202,7 @@ def format_stock_analysis(analysis_text, target_language="en"):
             top_p=1,
             stream=False,
         )
-
+        print(f"target language: {target_language}")
         formatted_analysis = completion.choices[0].message.content.strip()
         
         return formatted_analysis

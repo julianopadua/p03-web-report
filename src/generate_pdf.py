@@ -25,14 +25,14 @@ class CustomPDF(FPDF):
         """Generate the date in English and translate it only if necessary."""
         date_en = datetime.now().strftime("%B %d, %Y") 
 
-        if self.language != "en":
+        if self.language != "english":
             return translate_date(date_en, target_language=self.language)
         
         return date_en 
 
     def header(self):
         """Adds a header with the current date and header image."""
-        self.set_font("Lato", "B", 12)
+        self.set_font("Arial", "B", 12)
 
         if os.path.exists(self.paths["header_image"]):
             self.image(self.paths["header_image"], x=0, y=0, w=210)
@@ -77,17 +77,17 @@ class CustomPDF(FPDF):
         self.set_xy(x_pos, start_y) 
 
         self.set_x(x_pos + 5)
-        self.set_font("Lato", "B", 14)
+        self.set_font("Arial", "B", 14)
         self.cell(90, 10, ticker, ln=True, align="C")
         self.ln(5)
 
         self.insert_chart(ticker, x_pos, start_y + 8) 
 
-        self.set_font("Lato", "", 11)
+        self.set_font("Arial", "", 11)
         self.set_xy(x_pos + 5, self.get_y() + 5) 
 
         stock_prices = self.ticker_data[ticker]["Stock Prices"]
-        analysis_text = generate_stock_analysis_text(ticker, stock_prices)
+        analysis_text = generate_stock_analysis_text(ticker, stock_prices, self.language)
         self.multi_cell(90, 6, translate_text(analysis_text, self.language)) 
         self.ln(10) 
 
@@ -109,7 +109,7 @@ class CustomPDF(FPDF):
         new_y = y_pos + 63 
 
         self.set_xy(x_pos + 5, new_y)  
-        self.set_font("Lato", "I", 9)
+        self.set_font("Arial", "I", 9)
         self.cell(90, 5, translate_text("Source: Yahoo Finance", self.language), ln=True, align="R")
 
 
@@ -121,7 +121,7 @@ class CustomPDF(FPDF):
         ratio_keys = sorted(set(data1.keys()).union(set(data2.keys())))
 
         self.ln(5)
-        self.set_font("Lato", "B", 12)
+        self.set_font("Arial", "B", 12)
         self.cell(90, 8, translate_text("Financial Ratios", self.language), border=1, align="C")
         self.cell(50, 8, ticker1, border=1, align="C")
         if ticker2:
@@ -129,7 +129,7 @@ class CustomPDF(FPDF):
         self.ln()
 
         # insert each financial ratio as a row
-        self.set_font("Lato", "", 10)
+        self.set_font("Arial", "", 10)
         for ratio in ratio_keys:
             if str(data1.get(ratio, "-")) == "N/A" or str(data2.get(ratio, "-")) == "N/A" or str(ratio) == "Market Cap (USD)" or str(ratio) == "Enterprise Value (USD)" or str(ratio) == "52-Week Low" or str(ratio) == "52-Week High":
                 continue

@@ -53,7 +53,7 @@ class StockAnalysis:
 
         return self.stock_prices
 
-    def save_stock_price_plot(self, language="en"):
+    def save_stock_price_plot(self, language):
         """Generates and saves a stock price plot with translated labels."""
         if not self.stock_prices.empty:
             labels = {
@@ -61,7 +61,7 @@ class StockAnalysis:
                 "y_axis": "Closing Price (USD)"
             }
 
-            if language != "en":
+            if language != "english":
                 translated_labels = translate_chart_labels(labels, target_language=language)
             else:
                 translated_labels = labels  # No translation needed
@@ -131,7 +131,7 @@ def analyze_multiple_tickers(tickers, language):
     
     return results
 
-def generate_stock_analysis_text(ticker, stock_prices):
+def generate_stock_analysis_text(ticker, stock_prices, language):
     """
     Generates a conditional text analysis based on stock price movements.
 
@@ -211,7 +211,7 @@ def generate_stock_analysis_text(ticker, stock_prices):
     else:
         text += f"The stock is trading below the 30-day moving average ({ma_30:.2f}).\n"
 
-    return format_stock_analysis(text)
+    return format_stock_analysis(text, language)
 
 
 if __name__ == "__main__":
