@@ -14,10 +14,10 @@ class CustomPDF(FPDF):
         print(f"Language: {self.language}")
         self.ticker_data = ticker_data
 
-        self.add_font("Lato", "", os.path.join(self.paths["fonts"], "Lato-Regular.ttf"), uni=True)
-        self.add_font("Lato", "B", os.path.join(self.paths["fonts"], "Lato-Bold.ttf"), uni=True)
-        self.add_font("Lato", "BL", os.path.join(self.paths["fonts"], "Lato-Black.ttf"), uni=True)
-        self.add_font("Lato", "I", os.path.join(self.paths["fonts"], "Lato-Italic.ttf"), uni=True)
+        self.add_font("Lato", "", os.path.abspath(os.path.join(self.paths["fonts"], "Lato-Regular.ttf")), uni=True)
+        self.add_font("Lato", "B", os.path.abspath(os.path.join(self.paths["fonts"], "Lato-Bold.ttf")), uni=True)
+        self.add_font("Lato", "BL", os.path.abspath(os.path.join(self.paths["fonts"], "Lato-Black.ttf")), uni=True)
+        self.add_font("Lato", "I", os.path.abspath(os.path.join(self.paths["fonts"], "Lato-Italic.ttf")), uni=True)
 
         self.set_auto_page_break(auto=True, margin=15) 
 
