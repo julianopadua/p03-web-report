@@ -88,7 +88,10 @@ class CustomPDF(FPDF):
 
         stock_prices = self.ticker_data[ticker]["Stock Prices"]
         analysis_text = generate_stock_analysis_text(ticker, stock_prices, self.language)
-        self.multi_cell(90, 6, translate_text(analysis_text, self.language)) 
+        if self.language == 'english':
+            self.multi_cell(90, 6, analysis_text) 
+        else:
+            self.multi_cell(90, 6, translate_text(analysis_text, self.language)) 
         self.ln(10) 
 
 
@@ -110,7 +113,10 @@ class CustomPDF(FPDF):
 
         self.set_xy(x_pos + 5, new_y)  
         self.set_font("Arial", "I", 9)
-        self.cell(90, 5, translate_text("Source: Yahoo Finance", self.language), ln=True, align="R")
+        if self.language == 'english':
+            self.cell(90, 5, "Source: Yahoo Finance", ln=True, align="R")
+        else:
+            self.cell(90, 5, translate_text("Source: Yahoo Finance", self.language), ln=True, align="R")
 
 
     def insert_financial_ratios_table(self, ticker1, ticker2):
@@ -122,7 +128,10 @@ class CustomPDF(FPDF):
 
         self.ln(5)
         self.set_font("Arial", "B", 12)
-        self.cell(90, 8, translate_text("Financial Ratios", self.language), border=1, align="C")
+        if self.language == 'english':
+            self.cell(90, 8, "Financial Ratios", border=1, align="C")
+        else:    
+            self.cell(90, 8, translate_text("Financial Ratios", self.language), border=1, align="C")
         self.cell(50, 8, ticker1, border=1, align="C")
         if ticker2:
             self.cell(50, 8, ticker2, border=1, align="C")
@@ -133,7 +142,10 @@ class CustomPDF(FPDF):
         for ratio in ratio_keys:
             if str(data1.get(ratio, "-")) == "N/A" or str(data2.get(ratio, "-")) == "N/A" or str(ratio) == "Market Cap (USD)" or str(ratio) == "Enterprise Value (USD)" or str(ratio) == "52-Week Low" or str(ratio) == "52-Week High":
                 continue
-            self.cell(90, 8, translate_text(ratio, self.language), border=1)
+            if self.language == "english":
+                self.cell(90, 8, ratio, border=1)
+            else: 
+                self.cell(90, 8, translate_text(ratio, self.language), border=1)
             self.cell(50, 8, str(data1.get(ratio, "-")), border=1, align="C")
             if ticker2:
                 self.cell(50, 8, str(data2.get(ratio, "-")), border=1, align="C")

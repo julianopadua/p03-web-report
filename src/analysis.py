@@ -210,7 +210,7 @@ def generate_stock_analysis_text(ticker, stock_prices, language):
         text += f"The stock remains above the 30-day moving average ({ma_30:.2f}).\n"
     else:
         text += f"The stock is trading below the 30-day moving average ({ma_30:.2f}).\n"
-
+    
     return format_stock_analysis(text, language)
 
 
