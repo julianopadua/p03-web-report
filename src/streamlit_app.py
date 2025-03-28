@@ -8,7 +8,6 @@ from generate_pdf import analyze_multiple_tickers, CustomPDF  # Importing PDF ge
 
 paths = load_config()
 
-# Load ticker data from stocks.csv
 STOCKS_CSV = os.path.join(paths["data_processed"], "stocks.csv")
 
 def load_tickers():
@@ -19,10 +18,8 @@ def load_tickers():
             return sorted(df["Name"].dropna().unique().tolist())  # Ensure no duplicates and sorted
     return []  # Return an empty list if file not found
 
-# Get tickers dynamically
 TICKER_LIST = load_tickers()
 
-# Language options with added Italian
 LANGUAGE_OPTIONS = {
     "English": "english",
     "Português (Brasil)": "pt",
@@ -32,23 +29,29 @@ LANGUAGE_OPTIONS = {
     "Italiano": "italian"
 }
 
-# Set up the Streamlit page
-st.set_page_config(page_title="Company Comparison App", layout="wide")
-st.title("📊 Company Comparison Web App")
+# initial setup
+st.set_page_config(page_title="Company Comparison Report", layout="wide")
+st.title("📊 Company Comparison Report")
 st.write("Select companies and a language for generating a financial report.")
 
-### 1. Searchable Dropdown for Ticker Selection
+#dropdown for tickers
 selected_tickers = st.multiselect(
-    "🔍 Search and Select Company Tickers", 
+    "Search and Select Company Tickers", 
     options=TICKER_LIST, 
     default=[], 
     placeholder="Type to search (e.g., AAPL, GOOGL) or enter manually"
 )
 
-# Allow user to manually add a ticker
-manual_ticker = st.text_input("✏️ Or enter a ticker manually (if not in the list)")
+# manually add a ticker
+manual_ticker = st.text_input("Or enter one or more tickers manually (comma-separated, e.g., GOOG, AAPL, AMZN)")
+
 if manual_ticker:
-    selected_tickers.append(manual_ticker.strip().upper())  # Ensure uppercase formatting
+    tickers = [t.strip().upper() for t in manual_ticker.split(",") if t.strip()]
+    print(f"TICKERS: {tickers}")
+    # append would add the list itself as the next element of selected tickers;
+    # extend iterate through tickers and add one-by-one
+    selected_tickers.extend(tickers)  
+ 
 
 # Remove duplicates if a ticker is both in dropdown and manually added
 selected_tickers = list(set(selected_tickers))
