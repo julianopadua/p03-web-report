@@ -39,11 +39,11 @@ selected_tickers = st.multiselect(
     "Search and Select Company Tickers", 
     options=TICKER_LIST, 
     default=[], 
-    placeholder="Type to search (e.g., AAPL, GOOG) or enter manually"
+    placeholder="Type to search (e.g., AAPL, GOOGL) or enter manually"
 )
 
 # manually add a ticker
-manual_ticker = st.text_input("Or enter one or more tickers manually (comma-separated, e.g., GOOG, AAPL, AMZN)")
+manual_ticker = st.text_input("Or enter one or more tickers manually (comma-separated, e.g., GOOGL, AAPL, AMZN)")
 
 if manual_ticker:
     tickers = [t.strip().upper() for t in manual_ticker.split(",") if t.strip()]
