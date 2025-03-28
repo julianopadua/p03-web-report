@@ -76,7 +76,7 @@ class CustomPDF(FPDF):
         """Adds a company's section (title + chart) at a fixed Y position."""
         self.set_xy(x_pos, start_y) 
 
-        self.set_x(x_pos + 5)
+        self.set_x(x_pos + 7)
         self.set_font("Arial", "B", 14)
         self.cell(90, 10, ticker, ln=True, align="C")
         self.ln(5)
@@ -151,8 +151,18 @@ class CustomPDF(FPDF):
                 self.cell(50, 8, str(data2.get(ratio, "-")), border=1, align="C")
             self.ln()
 
+        # add source
+        self.ln(3)
+        self.set_font("Arial", "I", 9)
+        if self.language == 'english':
+            self.cell(0, 5, "Source: Yahoo Finance", ln=True, align="R")
+        else:
+            self.cell(0, 5, translate_text("Source: Yahoo Finance", self.language), ln=True, align="R")
+
+
 paths = load_config()
 
+'''
 # example usage
 if __name__ == "__main__":
     tickers = ["AAPL", "AMZN", "AMER3.SA", "LREN3.SA"]  
@@ -160,3 +170,4 @@ if __name__ == "__main__":
 
     pdf = CustomPDF(paths, ticker_data, language='pt')
     pdf.generate_report()
+'''

@@ -74,6 +74,8 @@ class StockAnalysis:
             plt.ylabel(translated_labels["y_axis"], fontsize=16) 
             plt.legend(fontsize=12)
             plt.grid(False)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
 
             plt.savefig(self.plot_path)
             plt.close()  # Free memory
@@ -214,6 +216,8 @@ def generate_stock_analysis_text(ticker, stock_prices, language):
     return format_stock_analysis(text, language)
 
 
+'''
+
 if __name__ == "__main__":
     # Example Usage (Testing)
     tickers = ["AAPL", "GOOGL"]
@@ -249,3 +253,5 @@ if __name__ == "__main__":
         print(f"\n🖼️ Stock price plot saved at: {data['Plot Path']}")
 
         print("\n" + "=" * 50)
+
+'''

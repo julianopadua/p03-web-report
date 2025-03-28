@@ -40,6 +40,7 @@ def translate_text(text, target_language):
         )
         
         translated_text = completion.choices[0].message.content.strip()
+        print(f"target language translate_text: {target_language}")
         return translated_text
 
     except Exception as e:
@@ -81,7 +82,7 @@ def translate_chart_labels(labels_dict, target_language):
     
         # Convert response back into a dictionary format
         translated_labels = eval(translated_text) if "{" in translated_text else {"error": "Invalid response"}
-        
+        print(f"target language translate_chart_labels: {target_language}")
         return translated_labels
 
     except Exception as e:
@@ -117,6 +118,7 @@ def translate_date(date_str, target_language):
         )
 
         translated_date = completion.choices[0].message.content.strip()
+        print(f"target language translate_date: {target_language}")
         return translated_date
 
     except Exception as e:
@@ -158,7 +160,8 @@ def format_description(description, target_language):
         )
 
         formatted_description = completion.choices[0].message.content.strip()
-        
+        print(f"target language format_description: {target_language}")
+
         return formatted_description
 
     except Exception as e:
@@ -202,7 +205,7 @@ def format_stock_analysis(analysis_text, target_language):
             top_p=1,
             stream=False,
         )
-        print(f"target language: {target_language}")
+        print(f"target language format_stock_analysis: {target_language}")
         formatted_analysis = completion.choices[0].message.content.strip()
         
         return formatted_analysis
@@ -211,6 +214,7 @@ def format_stock_analysis(analysis_text, target_language):
         print(f"❌ Error contacting LLaMA: {e}")
         return analysis_text  # Fallback to original analysis if translation fails
 
+'''
 # Example usage
 if __name__ == "__main__":
     labels = {
@@ -221,3 +225,4 @@ if __name__ == "__main__":
 
     translated_labels = translate_chart_labels(labels, target_language="pt")
     print(f"📊 Translated Labels: {translated_labels}")
+'''

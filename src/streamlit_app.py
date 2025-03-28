@@ -39,7 +39,7 @@ selected_tickers = st.multiselect(
     "Search and Select Company Tickers", 
     options=TICKER_LIST, 
     default=[], 
-    placeholder="Type to search (e.g., AAPL, GOOGL) or enter manually"
+    placeholder="Type to search (e.g., AAPL, GOOG) or enter manually"
 )
 
 # manually add a ticker
